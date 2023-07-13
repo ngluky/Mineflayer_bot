@@ -480,3 +480,9 @@ function afk() {
         command: 'bot_afk'
     })
 }
+function Follow(name) {
+    new_bot()
+    sendAip('FOLLOW', {
+        bot_name: name
+    })
+}

@@ -1,0 +1,350 @@
+/* width */
+::-webkit-scrollbar {
+    width: 5px;
+  }
+  
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: #888;
+  }
+  
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+
+* {
+    padding: 0;
+    margin: 0;   
+    color: #F4EEE0;
+    font-family: "Roboto Mono", monospace;
+    font-size: 17px;
+}
+
+body {
+    height: 100vh;
+    background-color: #4F4557;
+}
+
+.body {
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 54px calc(70% - 27px) calc(30% - 27px);
+}
+
+.body .star_bart {
+    background: #4F4557;
+}
+
+.body .conten {
+    background: #393646;
+    border-radius: 10px 0 0 0px;
+}
+
+.body .contro {
+    background: #393646;
+    border-left: 2px black solid;
+    overflow: overlay;
+    padding-bottom: 30px;
+}
+
+.star_bart .button {
+    height: 40px;
+    width: 40px;
+    margin: 7px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    background: #393646;
+    cursor: pointer;
+    overflow: hidden;
+}
+.star_bart .button i {
+    font-size: 20px;
+    color: #F4EEE0;
+}
+
+.star_bart .button.bot img {
+    height: 100%;
+    width: 100%;
+}
+
+.star_bart .button:hover {
+    filter: brightness(0.5);
+}
+
+div.conten div.art img {
+    height: 100px;
+    margin: 20px 20px 0 20px;
+}
+.conten .row {
+    display: flex;
+    align-items: center;
+}
+
+.conten .f_hp  {
+    width: 70%;
+}
+.conten .f_hp .hp {
+    margin-top: 5px;
+    display: flex;
+
+}
+.conten .f_hp .icon {
+    position: relative;
+    display: block;
+    height: 20px;
+    width: 20px;
+}
+
+.conten .f_hp .icon img{
+    position: absolute;
+    top: 0;
+    height: 20px;
+    width: 20px;
+}
+
+.conten .f_hp .food {
+    margin-top: 5px;
+    display: flex;
+}
+
+.conten .f_hp .name input {
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 20px;
+    border-bottom: 1px #6D5D6E solid;
+    color: #F4EEE0;
+    width: 200px;
+    font-weight: bold;
+}
+
+.conten .row .button button {
+    height: 30px;
+    margin-top: 5px;
+    width: 89px;
+    display: block;
+    margin-left: 130px;
+    background-color: #6D5D6E;
+    border: 1px black solid;
+    border-radius: 10px;
+}
+
+.infor .xp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.infor .xp_di {
+    width: 70%;
+}
+
+.w3-container {
+    height: 3px;
+}
+
+.infor .inve {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.infor .inve_di {
+    display: flex;
+    justify-content: space-between;
+    width: fit-content;
+    background: #c6c6c6;
+    border-radius: 3px;
+    padding: 5px;
+    user-select: none;
+}
+
+.infor .main-inventory {
+    width: calc(54px * 9);
+    display: grid;
+    grid-template-rows: repeat(3,1fr);
+    grid-template-columns: repeat(9,1fr);
+}
+
+.infor .hotbar {
+    display: contents;
+}
+
+.infor .hotbar .slot {
+    margin-top: 10px;
+}
+
+.infor .inve .slot {
+    position: relative;
+    height: 50px;
+    width: 50px;
+    background: #4F4557;
+    border: 2px #6D5D6E solid;
+}
+
+.infor .inve .slot.vi {
+    background: transparent;
+    border: 2px transparent solid;
+}
+
+div.inve div.off_hand div.slot.off_hand {
+    margin-top: 10px;
+}
+
+.infor .armor {
+    display: flex;      
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.infor .off_hand {
+    margin: 0px 5px;
+}
+
+.infor .button {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.infor .button button {
+    width: 80px;
+    height: 30px;
+
+    background: #4F4557;
+    border: none;
+    margin: 5px;
+    border-radius: 5px;
+}
+
+.infor .position p{
+    font-weight: 100;
+}
+.infor .position {
+    margin-left: 10px;
+}
+
+.command {
+    font-size: 18px;
+    padding: 10px 10px 0 10px;
+}
+
+.command .head_command {
+    display: flex;
+    align-items: center;
+}
+
+.command .head_command p {
+    margin-left: 10px;
+}
+
+.command.input .body_command .one_line {
+    margin-left: 10px;
+    display: flex;
+    color: #6D5D6E;
+}
+.command.input .body_command .one_line p {
+    /* margin-left: 5px; */
+}
+.command.input .body_command .input_va input{
+    width: calc(100% - 30px);
+}
+.command.input .body_command .l {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+.command.input .body_command .l > div {
+    display: flex;
+    justify-content: center;
+}
+
+.command.input .body_command > div span {
+    color: rgb(158, 158, 158);
+    font-style: italic;
+}
+.command.input .body_command > div input {
+    margin-left: 15px;
+    width: 30px;
+    background: transparent;
+    border: transparent;
+    border-bottom: 2px #c6c6c6 solid;
+    outline: none;
+}
+
+.command .button_command {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.command .button_command button {
+    height: 30px;
+    width: 90px;
+    background: #6D5D6E;
+    border: none;
+    border-radius: 5px;
+    margin: 0px 5px;
+}
+
+.w3-container, .w3-panel {
+    padding: 0 !important;
+}
+
+.command.server .body_command input{
+    width: calc(100% - 10px);
+    margin-top: 5px;
+    color: #393646;
+    padding: 3px;
+    padding-left: 10px;
+
+}
+
+
+.row .log .line.err {
+    color: darkred;
+}
+.row .log .line {
+    line-height: 1.2;
+} 
+.row .log {
+    height: 100px;
+    width: 100%;
+    margin: 10px;
+    background: #6D5D6E;
+    border-radius: 10px;
+    box-shadow: inset 0px 0px 5px #393646;
+    padding: 5px;
+    overflow: overlay;
+}
+
+.slot img {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    max-height: calc(100% - 8px);
+    max-width: calc(100% - 8px);
+    /* margin: 4px; */
+}
+
+.slot p {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    transform: translate(10% , 20%);
+    z-index: 10;
+}
+
+#bot_display > div > div.button > button:nth-child(5) {
+    background: darkgreen;
+}
+

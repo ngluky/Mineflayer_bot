@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bot_contro</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.4.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <script src="main.js"></script>
+</head>
+
+<body>
+    <div class="body">
+        <div class="star_bart">
+            <div class="button">
+                <i class="ri-settings-2-line"></i>
+            </div>
+            <div class="button add" onclick="new_bot()">
+                <i class="ri-add-line"></i>
+            </div>
+        </div>
+        <div class="conten" id="bot_display">
+        </div>
+        <div class="contro">
+
+            <div class="command server">
+                <div class="head_command">
+                    <i class="ri-server-fill"></i>
+                    <p>server</p>
+                </div>
+
+                <div class="body_command">
+                    <input type="text" placeholder="IP" id="ip">
+                    <input type="text" placeholder="PORT" id="port">
+                </div>
+
+                <div class="button_command">
+                    <button onclick="createBot()">Start</button>
+                    <button onclick="cancel()">Cancel</button>
+                </div>
+            </div>
+
+            <div class="command pos input">
+                <div class="head_command">
+                    <i class="ri-map-pin-line"></i>
+                    <p>set position</p>
+                </div>
+                <div class="body_command">
+                    <div class="l">
+                        <div>
+                            <span>X</span>
+                            <input>
+                        </div>
+                        <div>
+                            <span>Y</span>
+                            <input>
+                        </div>
+                        <div>
+                            <span>Z</span>
+                            <input>
+                        </div>
+                    </div>
+                </div>
+                <div class="button_command">
+                    <button onclick="goto()">GOTO</button>
+                </div>
+            </div>
+
+            <div class="command bed input">
+                <div class="head_command">
+                    <i class="ri-hotel-bed-fill"></i>
+                    <p>bed position</p>                    
+                </div>
+                <div class="body_command">
+                    <div class="l">
+                        <div>
+                            <span>X</span>
+                            <input>
+                        </div>
+                        <div>
+                            <span>Y</span>
+                            <input>
+                        </div>
+                        <div>
+                            <span>Z</span>
+                            <input>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="button_command">
+                    <button>Set</button>
+                </div>
+            </div>
+
+            <div class="command autofish">
+                <div class="head_command">
+                    <i class="ri-robot-fill"></i>
+                    <p>auto fish</p>                    
+                </div>
+                <div class="button_command">
+                    <button onclick="autofish()">start</button>
+                </div>
+            </div>
+
+            <div class="command highway input">
+                <div class="head_command">
+                    <i class="ri-pencil-ruler-2-line"></i>
+                    <p>highway buiding</p>
+                </div>
+                <div class="body_command">
+                    <div class="one_line">
+                        <p>From</p>
+                    </div>
+                    <div class="l">
+                        <div>
+                            <span>X</span>
+                            <input>
+                        </div>
+                        <div>
+                            <span>Y</span>
+                            <input>
+                        </div>
+                        <div>
+                            <span>Z</span>
+                            <input>
+                        </div>
+                    </div>
+                    <div class="one_line">
+                        <p>To</p>
+                    </div>
+                    <div class="l">
+                        <div>
+                            <span>X</span>
+                            <input>
+                        </div>
+                        <div>
+                            <span>Y</span>
+                            <input>
+                        </div>
+                        <div>
+                            <span>Z</span>
+                            <input>
+                        </div>
+                    </div>
+                    <div class="one_line">
+                        <p>templay block buiding</p>
+                    </div>
+                    <div class="input_va">
+                        <input type="text">
+                    </div>
+                </div>
+
+                <div class="button_command">
+                    <button onclick="highwaybuding()">buiding</button>
+                </div>
+
+
+            </div>
+
+            <div class="command afk">
+                <div class="head_command">
+                    <p>afk</p>                    
+                </div>
+                <div class="button_command">
+                    <button onclick="afk()">buiding</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

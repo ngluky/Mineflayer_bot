@@ -1,0 +1,22 @@
+{
+  "name": "minecraft_bots",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "minecraft-data": "^3.33.0",
+    "mineflayer": "^4.8.1",
+    "mineflayer-antiafk": "github:Etiaro/mineflayer-antiafk",
+    "mineflayer-auto-eat": "^3.3.6",
+    "mineflayer-pathfinder": "^2.4.2",
+    "uuid": "^9.0.0",
+    "vec3": "^0.1.8",
+    "ws": "^8.13.0"
+  }
+}

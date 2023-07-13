@@ -1,8 +1,9 @@
 const mineflayer = require('mineflayer')
+const antiafk = require("mineflayer-antiafk");
+
 const Vec3 = require('vec3').Vec3
 const pathfinder = require('mineflayer-pathfinder').pathfinder
 const Movements = require('mineflayer-pathfinder').Movements
-const antiafk = require("mineflayer-antiafk");
 const { GoalNear, GoalFollow, GoalBlock } = require('mineflayer-pathfinder').goals
 
 class highway {
@@ -42,44 +43,33 @@ class botAutoFishing {
         this.host = host == '' ? 'localhost' : host
         this.port = port == '' ? 1111 : port
         this.isrun = false
-
+        this.last_command = null
         console.log(this, user, this.host, this.port)
 
-        this.Update = () => { }
+        //type: DEBUG, EVENT, INFOR, SUCCESS, ERROR
+        this.Update = (type, name, data) => { }
+        this.wsSend = (type, data) => {
+            this.Update(type, this.user, data)
+        }
         this.commands = {
             bot_cancel: async (username, arg) => {
-                if (this.bot.pathfinder.isMoving || this.bot.pathfinder.isMining || this.bot.pathfinder.isBuilding) this.bot.pathfinder.stop();
-                this.autofishData.isAutoFishing = false
-                this.bot.follow = null
-                this.bot.mine = null
-                this.bot.afk.stop();
-                if (this.autofishData.fishingBobberId) {
-                    this.bot.activateItem()
-                    this.autofishData.fishingBobberId = null
+                if (this.last_command) {
+                    this.commands.bot_stop(this.last_command)
+                    this.last_command = null
                 }
-
-                this.ishighway = false
-
-                while (1) {
-                    if (!this.ishighwayed) break
-                    await this.bot.waitForTicks(1)
-                }
-
-                if (username) {
-                    this.bot.chat(`/msg ${username} Thành công`)
-                }
-                this.Update('mess', this.user, 'hủy toàn bộ câu lệnh đang thực thi')
             },
             bot_goto: (username, arg) => {
                 if (arg.length == 4) {
                     var x = parseInt(arg[1]), y = parseInt(arg[2]), z = parseInt(arg[3])
                     this.bot.pathfinder.setGoal(new GoalNear(x, y, z, 0))
-                    this.Update('mess', this.user, 'bắt đầu đi')
+                    this.bot.emit('goto_started', (x, y, z))
+                    this.wsSend('DEBUG', `> GOTO ${x} ${y} ${z}`)
                     this.goal_reached_fun = () => {
                         if (username) {
                             this.bot.chat(`/msg ${username} đã tới nơi`)
                         }
-                        this.Update('mess', this.user, 'bot đã tới nơi')
+                        this.wsSend('SUCCESS', '> GOTO complete')
+                        this.bot.emit('goto_stoped', null)
                     }
                 }
             },
@@ -92,29 +82,26 @@ class botAutoFishing {
                 this.bot.pathfinder.setGoal(new GoalFollow(player.entity, 1), true)
             },
             bot_autofish: (username, arg) => {
-                this.autofishData.isAutoFishing = true
-
                 var fishing_rod = this.bot.inventory.items().find((e) => e.name == 'fishing_rod')
                 if (!fishing_rod) {
-                    this.autofishData.isAutoFishing = true
                     if (username) this.bot.chat(`/msg ${username} không có cần câu`);
-                    this.Update('mess', this.user, 'không có cần câu')
+                    this.wsSend('ERROR', '> FISH haven\' fishing_rod')
                     return
                 }
                 if (username) this.bot.chat(`/msg ${username} bắt đầu câu cá`);
-                this.Update('mess', this.user, 'bắt đầu câu cá')
-
 
                 this.bot.equip(fishing_rod).then(() => {
+                    this.wsSend('SUCCESS', '> FISH started')
+                    this.bot.emit('autofish_started', null)
                     this.activateFishing()
                 })
-
-
-
             },
             bot_dropall: (username, arg) => {
+                this.wsSend('DEBUG', `> DROP_ALL ${this.bot.inventory.items().length}items`)
                 var drop = () => {
-                    if (this.bot.inventory.items().length == 0) return
+                    if (this.bot.inventory.items().length == 0) {
+                        this.wsSend('SUCCESS', `> DROP_ALL complete`)
+                    }
                     var item = this.bot.inventory.items()[0]
                     this.bot.tossStack(item).then(() => {
                         drop()
@@ -123,8 +110,8 @@ class botAutoFishing {
                 drop()
             },
             bot_highwaybuding: (username, arg) => {
-                var pos = new Vec3(arg[1] * 1, arg[2] * 1, arg[3] * 1)
-                const target = new Vec3(arg[4] * 1, arg[5] * 1, arg[6] * 1)
+                var pos = this.bot.entity.position
+                const target = new Vec3(arg[1] * 1, arg[2] * 1, arg[3] * 1)
                 const line = new highway(pos, target)
                 var temlay = new Vec3(1, 0, 1)
                 var block_buding = this.mcData.itemsByName[arg[7]]
@@ -137,20 +124,18 @@ class botAutoFishing {
                     [0, 0, -1],
                 ]
                 const dig = async (block) => {
-                    if (!this.ishighway) { throw 'cancel' }
+                    if (this.stop_mess) { throw 'stop' }
                     if (block.name == 'water' || block.name == 'lava') return
                     var bestTool = this.bot.pathfinder.bestHarvestTool(block)
                     await this.bot.equip(bestTool)
                     await this.bot.dig(block, 'ignore')
                 }
-
                 const placeBlock = async (block, faceVector) => {
-                    if (!this.ishighway) { throw 'cancel' }
+                    if (this.stop_mess) { throw 'stop' }
                     var item = this.bot.inventory.items().find(e => e.name == block_buding.name)
                     await this.bot.equip(item)
                     await this.bot.placeBlock(block, faceVector)
                 }
-
                 const buid = async () => {
                     var current_position, last_position, last_vector = new Vec3(0, 0, 0)
                     while (1) {
@@ -162,105 +147,115 @@ class botAutoFishing {
                             let current_block_c, current_block_l, current_block_r
                             if (faceVector.x != 0 || faceVector.z != 0) {
                                 for (var height = 1; height < 5; height++) {
-                                    if (height == 1) {
-                                        if (last_vector.y == 0) continue
-                                    }
-                                    var pos_c = current_position.offset(0, 5 - height, 0)
-                                    var pos_l = current_position.offset(templay_vector.x, 5 - height, templay_vector.z)
-                                    var pos_r = current_position.offset(-templay_vector.x, 5 - height, -templay_vector.z)
 
-                                    current_block_c = this.bot.blockAt(pos_c)
-                                    current_block_l = this.bot.blockAt(pos_l)
-                                    current_block_r = this.bot.blockAt(pos_r)
+                                    if (this.stop_mess) { throw 'stop' }
 
-
-                                    var fromt_current_block_c = this.bot.blockAt(pos_c.offset(faceVector.x, 0, faceVector.z))
-                                    var fromt_current_block_l = this.bot.blockAt(pos_l.offset(faceVector.x, 0, faceVector.z))
-                                    var fromt_current_block_r = this.bot.blockAt(pos_r.offset(faceVector.x, 0, faceVector.z))
-
-                                    if (fromt_current_block_c.name == 'water' || fromt_current_block_c.name == 'lava') {
-                                        await placeBlock(current_block_c, faceVector)
-                                    }
-                                    if (fromt_current_block_l.name == 'water' || fromt_current_block_l.name == 'lava') {
-                                        await placeBlock(current_block_l, faceVector)
-                                    }
-                                    if (fromt_current_block_r.name == 'water' || fromt_current_block_r.name == 'lava') {
-                                        await placeBlock(current_block_r, faceVector)
-                                    }
-
-                                    //clear
-                                    if (current_block_c.diggable) {
-                                        for (var i = 0; i < 6; i++) {
-                                            var e = face[i]
-                                            var block = this.bot.blockAt(current_block_c.position.offset(e[0], e[1], e[2]))
-                                            if (block.name == 'water' || block.name == 'lava') {
-                                                await placeBlock(current_block_c, new Vec3(e[0], e[1], e[2]))
-                                            }
+                                    if (height == 0) {
+                                        var pos_c = current_position.offset(0, 0, 0)
+                                        current_block_c = this.bot.blockAt(pos_c)
+                                        if (current_block_c.transparent && current_block_c.diggable) {
+                                            await dig(current_block_c)
                                         }
-                                        await dig(current_block_c)
-                                    }
 
-                                    if (current_block_l.diggable) {
-                                        for (var i = 0; i < 6; i++) {
-                                            var e = face[i]
-                                            var block = this.bot.blockAt(current_block_l.position.offset(e[0], e[1], e[2]))
-                                            if (block.name == 'water' || block.name == 'lava') {
-                                                await placeBlock(current_block_l, new Vec3(e[0], e[1], e[2]))
-                                            }
+                                        current_block_c = this.bot.blockAt(current_position.offset(0, 0, 0))
+                                        if (current_block_c.name == 'air' || current_block_c.name == 'water' || current_block_c.name == 'lava') {
+                                            console.log(last_position)
+                                            await placeBlock(this.bot.blockAt(last_position), faceVector)
                                         }
-                                        await dig(current_block_l)
-                                    }
 
-                                    if (current_block_r.diggable) {
-                                        for (var i = 0; i < 6; i++) {
-                                            var e = face[i]
-                                            var block = this.bot.blockAt(current_block_r.position.offset(e[0], e[1], e[2]))
-                                            if (block.name == 'water' || block.name == 'lava') {
-                                                await placeBlock(current_block_r, new Vec3(e[0], e[1], e[2]))
+                                        if (faceVector.x != 0 || faceVector.z != 0) {
+                                            var pos_l = current_position.offset(templay_vector.x, 0, templay_vector.z)
+                                            var pos_r = current_position.offset(-templay_vector.x, 0, -templay_vector.z)
+
+                                            current_block_l = this.bot.blockAt(pos_l)
+                                            current_block_r = this.bot.blockAt(pos_r)
+
+                                            if (current_block_l.transparent && current_block_l.diggable) {
+                                                await dig(current_block_l)
                                             }
+                                            if (current_block_r.transparent && current_block_r.diggable) {
+                                                await dig(current_block_r)
+                                            }
+
+                                            current_block_l = this.bot.blockAt(current_position.offset(templay_vector.x, 0, templay_vector.z))
+                                            current_block_r = this.bot.blockAt(current_position.offset(-templay_vector.x, 0, -templay_vector.z))
+
+                                            if (current_block_l.name == 'air' || current_block_l.name == 'water' || current_block_l.name == 'lava') {
+                                                await placeBlock(current_block_c, new Vec3(templay_vector.x, 0, templay_vector.z))
+                                            }
+                                            if (current_block_r.name == 'air' || current_block_r.name == 'water' || current_block_r.name == 'lava') {
+                                                await placeBlock(current_block_c, new Vec3(-templay_vector.x, 0, -templay_vector.z))
+                                            }
+                                            await this.bot.pathfinder.goto(new GoalBlock(current_position.x, current_position.y + 1, current_position.z)).catch(e => { })
                                         }
-                                        await dig(current_block_r)
                                     }
+
+                                    else {
+                                        if (height == 1) {
+                                            if (last_vector.y == 0) continue
+                                        }
+                                        var pos_c = current_position.offset(0, 5 - height, 0)
+                                        var pos_l = current_position.offset(templay_vector.x, 5 - height, templay_vector.z)
+                                        var pos_r = current_position.offset(-templay_vector.x, 5 - height, -templay_vector.z)
+    
+                                        current_block_c = this.bot.blockAt(pos_c)
+                                        current_block_l = this.bot.blockAt(pos_l)
+                                        current_block_r = this.bot.blockAt(pos_r)
+    
+    
+                                        var fromt_current_block_c = this.bot.blockAt(pos_c.offset(faceVector.x, 0, faceVector.z))
+                                        var fromt_current_block_l = this.bot.blockAt(pos_l.offset(faceVector.x, 0, faceVector.z))
+                                        var fromt_current_block_r = this.bot.blockAt(pos_r.offset(faceVector.x, 0, faceVector.z))
+    
+                                        if (fromt_current_block_c.name == 'water' || fromt_current_block_c.name == 'lava') {
+                                            await placeBlock(current_block_c, faceVector)
+                                        }
+                                        if (fromt_current_block_l.name == 'water' || fromt_current_block_l.name == 'lava') {
+                                            await placeBlock(current_block_l, faceVector)
+                                        }
+                                        if (fromt_current_block_r.name == 'water' || fromt_current_block_r.name == 'lava') {
+                                            await placeBlock(current_block_r, faceVector)
+                                        }
+    
+                                        //clear
+                                        if (current_block_c.diggable) {
+                                            for (var i = 0; i < 6; i++) {
+                                                var e = face[i]
+                                                var block = this.bot.blockAt(current_block_c.position.offset(e[0], e[1], e[2]))
+                                                if (block.name == 'water' || block.name == 'lava') {
+                                                    await placeBlock(current_block_c, new Vec3(e[0], e[1], e[2]))
+                                                }
+                                            }
+                                            await dig(current_block_c)
+                                        }
+    
+                                        if (current_block_l.diggable) {
+                                            for (var i = 0; i < 6; i++) {
+                                                var e = face[i]
+                                                var block = this.bot.blockAt(current_block_l.position.offset(e[0], e[1], e[2]))
+                                                if (block.name == 'water' || block.name == 'lava') {
+                                                    await placeBlock(current_block_l, new Vec3(e[0], e[1], e[2]))
+                                                }
+                                            }
+                                            await dig(current_block_l)
+                                        }
+    
+                                        if (current_block_r.diggable) {
+                                            for (var i = 0; i < 6; i++) {
+                                                var e = face[i]
+                                                var block = this.bot.blockAt(current_block_r.position.offset(e[0], e[1], e[2]))
+                                                if (block.name == 'water' || block.name == 'lava') {
+                                                    await placeBlock(current_block_r, new Vec3(e[0], e[1], e[2]))
+                                                }
+                                            }
+                                            await dig(current_block_r)
+                                        }
+                                    }
+                                    
                                 }
                             }
 
-                            var pos_c = current_position.offset(0, 0, 0)
-                            current_block_c = this.bot.blockAt(pos_c)
-                            if (current_block_c.transparent && current_block_c.diggable) {
-                                await dig(current_block_c)
-                            }
 
-                            current_block_c = this.bot.blockAt(current_position.offset(0, 0, 0))
-                            if (current_block_c.name == 'air' || current_block_c.name == 'water' || current_block_c.name == 'lava') {
-                                console.log(last_position)
-                                await placeBlock(this.bot.blockAt(last_position), faceVector)
-                            }
-
-                            if (faceVector.x != 0 || faceVector.z != 0) {
-                                var pos_l = current_position.offset(templay_vector.x, 0, templay_vector.z)
-                                var pos_r = current_position.offset(-templay_vector.x, 0, -templay_vector.z)
-
-                                current_block_l = this.bot.blockAt(pos_l)
-                                current_block_r = this.bot.blockAt(pos_r)
-
-                                if (current_block_l.transparent && current_block_l.diggable) {
-                                    await dig(current_block_l)
-                                }
-                                if (current_block_r.transparent && current_block_r.diggable) {
-                                    await dig(current_block_r)
-                                }
-
-                                current_block_l = this.bot.blockAt(current_position.offset(templay_vector.x, 0, templay_vector.z))
-                                current_block_r = this.bot.blockAt(current_position.offset(-templay_vector.x, 0, -templay_vector.z))
-
-                                if (current_block_l.name == 'air' || current_block_l.name == 'water' || current_block_l.name == 'lava') {
-                                    await placeBlock(current_block_c, new Vec3(templay_vector.x, 0, templay_vector.z))
-                                }
-                                if (current_block_r.name == 'air' || current_block_r.name == 'water' || current_block_r.name == 'lava') {
-                                    await placeBlock(current_block_c, new Vec3(-templay_vector.x, 0, -templay_vector.z))
-                                }
-                                await this.bot.pathfinder.goto(new GoalBlock(current_position.x, current_position.y + 1, current_position.z)).catch(e => { })
-                            }
 
 
                             last_vector = faceVector
@@ -269,36 +264,67 @@ class botAutoFishing {
 
                     }
                 }
-                this.ishighway = true
-                this.ishighwayed = true
+
+                this.bot.emit('highwaybuding_started', (target.x, target.y, target.z))
+                this.bot.wsSend('DEBUG', `> HIGHWAYBUDING started to ${target.x} ${target.y} ${target.z}`)
                 buid().then(e => {
-                    this.ishighway = false
-                    this.ishighwayed = false
+                    this.bot.emit('highwaybuding_stoped', null)
+                    this.wsSend('SUCCESS', '> HIGHWAYBUDING complete')
                 }).catch(e => {
-                    console.log(e)
-                    this.ishighway = false
-                    this.ishighwayed = false
+                    if (e == 'stop') {
+                        this.bot.wsSend('SUCCESS', `> HIGHWAYBUDING cancel successfully`)
+                    }
+                    
+                    this.bot.emit('highwaybuding_stoped' , '')
                 })
             },
             bot_stop: (username, arg) => {
                 this.isrun = false
-                this.Update('DEBUG', this.user, false)
                 if (typeof (this.bot.quit) == 'function') {
+                    this.wsSend('DEBUG', 'logout server')
+                    this.isrun = false
+                    this.wsSend('EVENT', JSON.stringify({
+                        type: 'bot_run',
+                        data: this.isrun
+                    }))
                     this.bot.quit()
                 }
             },
             bot_afk: (username, arg) => {
                 this.bot.afk.setOptions({ fishing: false, actions: ['rotate', 'swingArm'] });
                 this.bot.afk.start();
-            }
+            },
+            stop_command: async (username, arg) => {
+                var command = arg[1].toLowerCase()
+                switch (command) {
+                    case "bot_goto":
+                        if (this.goto) {
+                            this.goal_reached_fun = undefined
+                            this.bot.pathfinder.stop()
+                            this.wsSend('SUCCESS', '> GOTO cancel successfully')
+                            this.bot.emit('goto_stoped', null)
+                        }
+                        break;
+                    case 'bot_autofish':
+                        if (this.autofishData.isAutoFishing) {
+                            if (this.autofishData.fishingBobberId) {
+                                this.bot.activateItem()
+                                this.autofishData.fishingBobberId = null
+                            }
+                            this.bot.wsSend('SUCCESS', '> FISH cancel successfully')
+                            this.bot.emit('autofish_stoped')
+                        }
+                    
+                    case 'bot_highwaybuding':
 
+                }
+            }
         }
         this.initBot();
     }
 
     //________________________________________________________________
     initBot() {
-        this.isrun = true
         this.bot = mineflayer.createBot({
             host: this.host,
             port: this.port,
@@ -312,9 +338,9 @@ class botAutoFishing {
             isAutoFishing: false,
             fishingBobberId: null
         }
-        this.ishighway = false
+        this.goto = false
+        this.stop_mess = false
         this.ishighwayed = false
-
 
         this.posBlockMine = null
         this.isKicked = false
@@ -323,14 +349,21 @@ class botAutoFishing {
         this.initEvent()
     }
     initEvent() {
+        this.bot.once('login', () => {
+            this.isrun = true
+            this.wsSend('EVENT', JSON.stringify({
+                type: 'bot_run',
+                data: this.isrun
+            }))
+        })
         this.bot.once('spawn', () => {
             this.mcData = require('minecraft-data')(this.bot.version)
             this.bot.inventory.on('updateSlot', () => {
-                this.Update('inventory', this.user, this.bot.inventory.items())
+                this.wsSend('EVENT', JSON.stringify({
+                    type: 'updateSlot',
+                    data: this.bot.inventory.items()
+                }))
             })
-
-            this.Update('inventory', this.user, this.bot.inventory.items())
-
             this.defaultMove = new Movements(this.bot, this.mcData)
             this.defaultMove.allowParkour = true
             this.defaultMove.allowSprinting = true
@@ -340,7 +373,6 @@ class botAutoFishing {
 
             this.bot.chat('/login i=input()')
         })
-
         this.bot.on('goal_reached', () => {
             if (this.goal_reached_fun) this.goal_reached_fun();
         })
@@ -426,6 +458,7 @@ class botAutoFishing {
             var command = this.commands[arg[0]]
             if (command) {
                 this.commands.bot_cancel().then(e => {
+                    this.last_command = command
                     console.log('ok')
                     command(username, arg)
                 })
@@ -434,22 +467,32 @@ class botAutoFishing {
                 this.bot.chat(`/msg ${username} không có câu lệnh đó`)
             }
         })
-
         this.bot.on('health', () => {
-            this.Update('hp', this.user, this.bot.health)
-            this.Update('food', this.user, this.bot.food)
+            this.wsSend('EVENT', JSON.stringify({
+                type: 'health',
+                data: {
+                    hp: this.bot.health,
+                    food: this.bot.food
+                }
+            }))
         })
         this.bot.on('move', () => {
             var pos = this.bot.entity.position
-
-            this.Update('pos', this.user, [pos.x, pos.y, pos.z])
+            this.wsSend('EVENT', JSON.stringify({
+                type: 'move',
+                data: {
+                    x: pos.x,
+                    y: pos.y,
+                    z: pos.z
+                }
+            }))
+            // this.Update('pos', this.user, [pos.x, pos.y, pos.z])
         })
-
         this.bot.on('error', (error) => {
-            this.Update('error', this.user, error)
+            this.wsSend('ERROR', JSON.stringify(error))
         })
         this.bot.on("actionBar", async (jsonMsg) => {
-            if (jsonMsg.translate ==  'sleep.players_sleeping') {
+            if (jsonMsg.translate == 'sleep.players_sleeping') {
                 var bed = this.bot.findBlock({
                     matching: (block) => {
                         var bool = block.displayName.includes('Bed')
@@ -463,8 +506,51 @@ class botAutoFishing {
                 }
             }
         })
+        this.bot.on('autofish_started', () => {
+            this.autofishData.isAutoFishing = true
+            this.wsSend('EVENT', JSON.stringify({
+                type: 'bot_autofish',
+                data: this.autofishData.isAutoFishing
+            }))
+        })
+        this.bot.on('autofish_stoped', () => {
+            this.autofishData.isAutoFishing = false
+            this.wsSend('EVENT', JSON.stringify({
+                type: 'bot_autofish',
+                data: this.autofishData.isAutoFishing
+            }))
+        })
+        this.bot.on('goto_started', () => {
+            this.goto = true
+            this.wsSend('EVENT', JSON.stringify({
+                type: 'bot_goto',
+                data: this.goto
+            }))
+        })
+        this.bot.on('goto_stoped', () => {
+            this.goto = false
+            this.wsSend('EVENT', JSON.stringify({
+                type: 'bot_goto',
+                data: this.goto
+            }))
+        })
+        this.bot.on('highwaybuding_started', (x , y, z) => {
+            this.ishighwayed = true
+            this.stop_mess = false
+            this.wsSend('EVENT', JSON.stringify({
+                type: 'bot_highwaybuding',
+                data: this.ishighwayed
+            }))
+        })
+        this.bot.on('highwaybuding_stoped', () => {
+            this.ishighwayed = false
+            this.stop_mess = false
+            this.wsSend('EVENT', JSON.stringify({
+                type: 'bot_highwaybuding',
+                data: this.ishighwayed
+            }))
+        })
     }
-
     //________________________________________________________________
     activateFishing() {
         var getId = (e) => {
@@ -493,8 +579,44 @@ class botAutoFishing {
             })
         }
         else {
-            this.Update('mess', this.user, 'không có nước ở gần')
+            this.wsSend('ERROR', '> FISH no water')
         }
+    }
+
+    wsSendDEBUG() {
+        this.wsSend('EVENT', JSON.stringify({
+            type: 'spawn',
+            data: true
+        }))
+        this.wsSend('EVENT', JSON.stringify({
+            type: 'health',
+            data: {
+                hp: this.bot.health,
+                food: this.bot.food
+            }
+        }))
+        this.wsSend('EVENT', JSON.stringify({
+            type: 'updateSlot',
+            data: this.bot.inventory.items()
+        }))
+        const pos = this.bot.entity.position
+        this.wsSend('EVENT', JSON.stringify({
+            type: 'move',
+            data: {
+                x: pos.x,
+                y: pos.y,
+                z: pos.z
+            }
+        }))
+        this.wsSend('INFOR', JSON.stringify({
+            botName: this.user,
+            iP: this.host,
+            Port: this.port
+        }))
+        this.wsSend('EVENT', JSON.stringify({
+            type: 'bot_run',
+            data: this.isrun
+        }))
     }
 }
 

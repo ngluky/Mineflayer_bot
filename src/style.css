@@ -25,6 +25,9 @@
     font-family: "Roboto Mono", monospace;
     font-size: 17px;
 }
+:root {
+    --slost-size: 40px
+}
 
 body {
     height: 100vh;
@@ -35,7 +38,7 @@ body {
     height: 100%;
     width: 100%;
     display: grid;
-    grid-template-columns: 54px calc(70% - 27px) calc(30% - 27px);
+    grid-template-columns: 54px calc(100% - 54px);
 }
 
 .body .star_bart {
@@ -43,6 +46,9 @@ body {
 }
 
 .body .conten {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background: #393646;
     border-radius: 10px 0 0 0px;
 }
@@ -90,7 +96,7 @@ div.conten div.art img {
 }
 
 .conten .f_hp  {
-    width: 70%;
+    width: 50%;
 }
 .conten .f_hp .hp {
     margin-top: 5px;
@@ -116,15 +122,25 @@ div.conten div.art img {
     display: flex;
 }
 
-.conten .f_hp .name input {
+.conten input {
+    text-transform: uppercase;
     background: transparent;
     border: none;
     outline: none;
-    font-size: 20px;
-    border-bottom: 1px #6D5D6E solid;
+    font-size: 17px;
     color: #F4EEE0;
     width: 200px;
     font-weight: bold;
+    border-bottom: 1px transparent solid;
+
+}
+
+input#name {
+    text-transform: none;
+}
+
+.conten input:focus {
+    border-bottom: 1px #6D5D6E solid;
 }
 
 .conten .row .button button {
@@ -155,10 +171,12 @@ div.conten div.art img {
 .infor .inve {
     margin-top: 20px;
     display: flex;
-    justify-content: center;
+    align-items: center;
+    justify-content: space-evenly;
 }
 
 .infor .inve_di {
+    height: fit-content;
     display: flex;
     justify-content: space-between;
     width: fit-content;
@@ -169,7 +187,7 @@ div.conten div.art img {
 }
 
 .infor .main-inventory {
-    width: calc(54px * 9);
+    width: calc((var(--slost-size) + 2px) * 9);
     display: grid;
     grid-template-rows: repeat(3,1fr);
     grid-template-columns: repeat(9,1fr);
@@ -180,15 +198,32 @@ div.conten div.art img {
 }
 
 .infor .hotbar .slot {
-    margin-top: 10px;
+    margin-top: calc(var(--slost-size) /5);
 }
 
 .infor .inve .slot {
+    height: calc(var(--slost-size) + 2px);
+    width: calc(var(--slost-size));
+    
+}
+
+.infor .inve .slot input {
+    display: none;
+}
+
+
+.infor .inve .slot label {
+    display: block;
+    height: var(--slost-size);
+    width: var(--slost-size);
     position: relative;
-    height: 50px;
-    width: 50px;
     background: #4F4557;
     border: 2px #6D5D6E solid;
+}
+
+.infor .inve .slot input:checked ~ label {
+    border: 2px white solid;
+    
 }
 
 .infor .inve .slot.vi {
@@ -197,7 +232,7 @@ div.conten div.art img {
 }
 
 div.inve div.off_hand div.slot.off_hand {
-    margin-top: 10px;
+    margin-top: calc(var(--slost-size) / 5 );
 }
 
 .infor .armor {
@@ -207,7 +242,7 @@ div.inve div.off_hand div.slot.off_hand {
 }
 
 .infor .off_hand {
-    margin: 0px 5px;
+    margin: 0px calc(var(--slost-size) / 10);
 }
 
 .infor .button {
@@ -245,6 +280,7 @@ div.inve div.off_hand div.slot.off_hand {
 
 .command .head_command p {
     margin-left: 10px;
+    margin-right: auto;
 }
 
 .command.input .body_command .one_line {
@@ -293,6 +329,26 @@ div.inve div.off_hand div.slot.off_hand {
     border: none;
     border-radius: 5px;
     margin: 0px 5px;
+    cursor: pointer;
+}
+
+.command .button_command button.setting_command {
+    background: green;
+}
+
+.command .button_command button:hover {
+    filter: brightness(0.8);
+}
+
+.command .button_command button:active {
+    filter: brightness(1.4);
+}
+
+.command .head_command .status_command {
+    height: 15px;
+    width: 15px;
+    border-radius: 3px;
+    background: red;
 }
 
 .w3-container, .w3-panel {
@@ -308,35 +364,17 @@ div.inve div.off_hand div.slot.off_hand {
 
 }
 
-
-.row .log .line.err {
-    color: darkred;
-}
-.row .log .line {
-    line-height: 1.2;
-} 
-.row .log {
-    height: 100px;
-    width: 100%;
-    margin: 10px;
-    background: #6D5D6E;
-    border-radius: 10px;
-    box-shadow: inset 0px 0px 5px #393646;
-    padding: 5px;
-    overflow: overlay;
-}
-
-.slot img {
+.slot label img {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     position: absolute;
-    max-height: calc(100% - 8px);
-    max-width: calc(100% - 8px);
+    max-height: calc(100% - 6px);
+    max-width: calc(100% - 6px);
     /* margin: 4px; */
 }
 
-.slot p {
+.slot label p {
     position: absolute;
     bottom: 0;
     right: 0;
@@ -348,3 +386,65 @@ div.inve div.off_hand div.slot.off_hand {
     background: darkgreen;
 }
 
+.status .status_div {
+    height: 15px;
+    width: 15px;
+    background: red;
+    border-radius: 3px;
+}
+.status .div_line p {
+    margin-right: 10px;
+    text-transform: uppercase;
+}
+
+.div_line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.server_infor .l p {
+    font-size: 17px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.bot_button {
+    margin-right: 30px;
+}
+
+.bot_button button {
+    display: flex;
+    height: 40px;
+    background: #888;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    width: 100%;
+}
+
+.bot_button button + button {
+    margin-top: 5px;
+}
+
+.bot_button button:nth-child(1) {
+    background: green;
+}
+
+.inve .log {
+    width: 200px;
+    padding: 5px 0;
+    background: #4F4557;
+    border-radius: 5px;
+    overflow: overlay;
+    align-self: stretch;
+}
+
+.div_line.center {
+    justify-content: center;
+}
+
+.status button {
+    background: #888;
+    padding: 0 5px;
+}

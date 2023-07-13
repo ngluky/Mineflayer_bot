@@ -1,85 +1,65 @@
 const express = require('express');
-const app = express();
-const server = require('http').createServer(app)
+const http = require('http')
 const path = require('path');
 const WebSocket = require('ws')
 const { v4: uuidv4 } = require('uuid')
 
+const botAutoFishing = require('./botAutoFishing');
+
+
+const app = express();
+const server = http.createServer(app)
 const wss = new WebSocket.Server({ server: server })
 
-const botAutoFishing = require('./botAutoFishing');
-const { request } = require('http');
-
-
-function handl_update(type, name, value) {
-    var wss_id = data.bots_ws_follow[name]
-    wss.clients.forEach(e => {
-        if (wss_id.includes(e.id)) {
-            e.send(JSON.stringify({ type: type, 'data': value }))
-        }
-    })
-}
-
-function from_ws_2_bot(id) {
-    let bot_res;
-    Object.keys(data.bots_ws_follow).forEach(e => {
-        var element = data.bots_ws_follow[e].find(j => j == id)
-        if (element) {
-            bot_res = data.bots[e]
-        }
-    })
-    return bot_res
-}
-
-var data = {
+var handl_command = {
     bots: {},
     bots_ws_follow: {},
     ws_id: {},
     cancel: (arg, ws) => {
-        var bot = from_ws_2_bot(ws.id)
+        var bot = ws_2_bot(ws.id)
         // console.log(bot)
         if (bot) {
             bot.commands.bot_cancel()
         }
     },
     autofish: (arg, ws) => {
-        var bot = from_ws_2_bot(ws.id)
+        var bot = ws_2_bot(ws.id)
         console.log(bot)
         if (bot) {
             bot.commands.bot_autofish()
         }
     },
     goto: (arg, ws) => {
-        var bot = from_ws_2_bot(ws.id)
+        var bot = ws_2_bot(ws.id)
         if (bot) {
             bot.commands.bot_goto(null, arg)
         }
     },
     createBot: (arg, ws) => {
-        if (data.bots[arg[0]]) return true
-        var bot = new botAutoFishing(arg[0], arg[1], arg[2], data.get_fun)
+        if (handl_command.bots[arg[0]]) return true
+        var bot = new botAutoFishing(arg[0], arg[1], arg[2], handl_command.get_fun)
         bot.Update = handl_update
-        data.bots[arg[0]] = bot
-        data.bots_ws_follow[arg[0]] = []
-        if (!data.bots_ws_follow[arg[0]].includes(ws.id)) {
-            data.bots_ws_follow[arg[0]].push(ws.id)
+        handl_command.bots[arg[0]] = bot
+        handl_command.bots_ws_follow[arg[0]] = []
+        if (!handl_command.bots_ws_follow[arg[0]].includes(ws.id)) {
+            handl_command.bots_ws_follow[arg[0]].push(ws.id)
         }
         return true
     },
     getInforBot: (bot_name, ws) => {
-        bots = data.bots_ws_follow[bot_name]
+        bots = handl_command.bots_ws_follow[bot_name]
         console.log(bots)
-        Object.keys(data.bots_ws_follow).forEach(e => {
-            var element = data.bots_ws_follow[e].find(j => j == ws.id)
+        Object.keys(handl_command.bots_ws_follow).forEach(e => {
+            var element = handl_command.bots_ws_follow[e].find(j => j == ws.id)
             if (element) {
-                const index = data.bots_ws_follow[e].indexOf(ws.id);
-                data.bots_ws_follow[e].splice(index, 1)
+                const index = handl_command.bots_ws_follow[e].indexOf(ws.id);
+                handl_command.bots_ws_follow[e].splice(index, 1)
             }
         })
         if (!bots.includes(ws.id)) {
             bots.push(ws.id)
         }
-        var bot = data.bots[bot_name[0]]
+        var bot = handl_command.bots[bot_name[0]]
         var pos = bot.bot.entity.position
         if (bot && bot.isrun) {
             var res = {
@@ -95,73 +75,120 @@ var data = {
         }
     },
     stop: (arg, ws) => {
-        var bot = from_ws_2_bot(ws.id)
+        var bot = ws_2_bot(ws.id)
         // console.log(bot)
         if (bot) {
             var name = bot.user
             bot.commands.bot_stop()
-            delete data.bots[name]
-            delete data.bots_ws_follow[name]
+            delete handl_command.bots[name]
+            delete handl_command.bots_ws_follow[name]
         }
     },
     highwaybuding: (arg, ws) => {
-        var bot = from_ws_2_bot(ws.id)
+        var bot = ws_2_bot(ws.id)
         if (bot) {
             bot.commands.bot_highwaybuding(null, arg)
         }
     },
     afk: (arg, ws) => {
-        var bot = from_ws_2_bot(ws.id)
+        var bot = ws_2_bot(ws.id)
         if (bot) {
             bot.commands.bot_afk(null, arg)
         }
     }
 }
+
+function handl_update(type, name, data) {
+    var wss_id = handl_command.bots_ws_follow[name]
+    wss.clients.forEach(ws => {
+        if (wss_id.includes(ws.id)) {
+            ws.send(JSON.stringify({ type: type, 'data': data }))
+        }
+    })
+}
+function ws_2_bot(id) {
+    let bot_res;
+    Object.keys(handl_command.bots_ws_follow).forEach(e => {
+        var element = handl_command.bots_ws_follow[e].find(j => j == id)
+        if (element) {
+            bot_res = handl_command.bots[e]
+        }
+    })
+    return bot_res
+}
+
 wss.on('connection', function connection(ws) {
     ws.id = uuidv4()
     ws.on('message', (mess) => {
-        var me = JSON.parse(String(mess))
-        // console.log(me)
-        var res;
-        if (me.type == 'object') {
-            me.path.forEach(element => {
-                res = data[element]
-            });
-            ws.send(JSON.stringify({ id: me.id, data: Object.keys(res, ws) }))
-        }
-        else if (me.type == 'function') {
-            me.path.forEach(element => {
-                res = data[element]
-            });
-
-            ws.send(JSON.stringify({ id: me.id, data: res(me.arg, ws) }))
-        }
-        else if (me.type == 'command') {
-            if (me.path == 'autofish') {
-
-            }
-        }
-        else if (me.type == 'unfollow') {
-            Object.keys(data.bots_ws_follow).forEach(e => {
-                var element = data.bots_ws_follow[e].find(j => j == ws.id)
-                if (element) {
-                    const index = data.bots_ws_follow[e].indexOf(ws.id);
-                    data.bots_ws_follow[e].splice(index, 1)
+        var mess = JSON.parse(String(mess))
+        console.log("🚀 ~ file: index.js:125 ~ ws.on ~ mess:", mess)
+        
+        switch (mess.type) {
+            case 'STAR_BOT':
+                const {botName, iP, Port} = mess.data
+                if (handl_command.bots[botName]) return
+                var bot = new botAutoFishing(botName, iP, Port)
+                bot.Update = handl_update
+                handl_command.bots[botName] = bot
+                handl_command.bots_ws_follow[botName] = [ws.id]
+                break;
+            case 'FOLLOW':
+                const {bot_name} = mess.data;
+                if (!handl_command.bots_ws_follow[bot_name].includes(ws.id)) {
+                    handl_command.bots_ws_follow[bot_name].push(ws.id)
                 }
-            })
+                handl_command.bots[bot_name].wsSendDEBUG()
+                break;
+            case 'UNFOLLOW':
+                Object.keys(handl_command.bots_ws_follow).forEach(e => {
+                    var element = handl_command.bots_ws_follow[e].find(j => j == ws.id)
+                    if (element) {
+                        const index = handl_command.bots_ws_follow[e].indexOf(ws.id);
+                        handl_command.bots_ws_follow[e].splice(index, 1)
+                    }
+                })
+                break;
+            case 'STOP_BOT':
+                var bot = ws_2_bot(ws.id)
+                bot.commands.bot_stop()
+                bot.wsSend('EVENT', JSON.stringify({
+                    type: 'bot_run',
+                    data: false
+                }))
+
+            
+
         }
+        // if (mess.type == 'unfollow') {
+        //     Object.keys(handl_command.bots_ws_follow).forEach(e => {
+        //         var element = handl_command.bots_ws_follow[e].find(j => j == ws.id)
+        //         if (element) {
+        //             const index = handl_command.bots_ws_follow[e].indexOf(ws.id);
+        //             handl_command.bots_ws_follow[e].splice(index, 1)
+        //         }
+        //     })
+        // }
     })
 
     ws.on('close', () => {
-        Object.keys(data.bots_ws_follow).forEach(e => {
-            var element = data.bots_ws_follow[e].find(j => j == ws.id)
+        Object.keys(handl_command.bots_ws_follow).forEach(e => {
+            var element = handl_command.bots_ws_follow[e].find(j => j == ws.id)
             if (element) {
-                const index = data.bots_ws_follow[e].indexOf(ws.id);
-                data.bots_ws_follow[e].splice(index, 1)
+                const index = handl_command.bots_ws_follow[e].indexOf(ws.id);
+                handl_command.bots_ws_follow[e].splice(index, 1)
             }
         })
     })
+
+    ws.send(JSON.stringify({
+        type: 'INFOR',
+        data: JSON.stringify({
+            bots: Object.keys(handl_command.bots)
+        })
+    }))
 })
+*
+
 app.get('/', (req, res) => {
     res.send(`<!DOCTYPE html><html lang="en"><head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Document</title></head><body> <script> window.location = window.location.href + 'bot_contro' </script></body></html>`)
 })
@@ -190,6 +217,8 @@ app.get('/bot_contro', (req, res) => {
         root: path.join(__dirname)
     })
 })
+
+
 server.listen(4000, () => {
     console.log('http://127.0.0.1:' + 4000)
     console.log('ok')

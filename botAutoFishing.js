@@ -282,7 +282,7 @@ class botAutoFishing {
             },
             bot_stop: (username, arg) => {
                 this.isrun = false
-                this.Update('isrun', this.user, false)
+                this.Update('WARNING', this.user, false)
                 if (typeof (this.bot.quit) == 'function') {
                     this.bot.quit()
                 }

@@ -30,6 +30,7 @@
 }
 
 body {
+    position: relative;
     height: 100vh;
     background-color: #4F4557;
 }
@@ -447,4 +448,106 @@ div.inve div.off_hand div.slot.off_hand {
 .status button {
     background: #888;
     padding: 0 5px;
+}
+
+.popup {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    height: 100vh;
+    width: 100%;
+
+    background: #000000A5;
+}
+
+.popup_close {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    height: min-content;
+    width: min-content;
+}
+
+.popup_close i:hover {
+    filter: brightness(0.8);
+}
+
+.popup_close i:active {
+    filter: brightness(1.4);
+}
+
+
+.popup_close i {
+    font-size: 30px;
+}
+
+.popup_body {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 5px;
+    background: #393646;
+    border-radius: 5px;
+    width: calc(100% - 40px);
+    max-width: 500px;
+}
+
+.popup .command_line {
+    display: flex;
+}
+
+.popup .command_line input {
+    resize: horizontal;
+    width: 200px;
+}
+
+.popup .command_line input:active {
+    width: auto;
+}
+.popup .command_line input:focus {
+    min-width: 200px;
+}
+
+.popup .command_line {
+    display: grid;
+    grid-template-columns: 1fr 2fr 0.5fr;
+    align-items: center;
+}
+
+.popup.hind {
+    display: none;
+}
+
+.popup .command_line_button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+.popup .command_line_button button {
+    height: 27px;
+    padding: 0 5px;
+    background: #888;
+    width: 80px;
+}
+
+.popup .command_line_arg {
+    display: flex;
+    justify-content: center;
+}
+
+.custom_input {
+    display: inline-block;
+    margin: 0px 5px;
+    min-width: 30px;
+    height:30px;
+    line-height:1.5;
+    outline:none;
+    background-color: transparent;
+}
+
+.custom_input[placeholder]:empty:before {
+    content: attr(placeholder);
+    color: #555; 
 }

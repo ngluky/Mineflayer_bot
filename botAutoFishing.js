@@ -293,6 +293,8 @@ class botAutoFishing {
             bot_afk: (username, arg) => {
                 this.bot.afk.setOptions({ fishing: false, actions: ['rotate', 'swingArm'] });
                 this.bot.afk.start();
+                this.bot.emit('afk_started', null)
+                this.wsSend('DEBUG', '> ANTIAFK started')
             },
             stop_command: async (username, arg) => {
                 var command = arg[1].toLowerCase()
@@ -316,6 +318,12 @@ class botAutoFishing {
                         }
                     
                     case 'bot_highwaybuding':
+                        // TODO:
+                        break;
+                    case 'bot_afk':
+                        this.bot.emit('afk_stoped', null);
+                        this.wsSend('DEBUG', '> ANTIAFK cancel successfully')
+                        break;
 
                 }
             }
@@ -548,6 +556,18 @@ class botAutoFishing {
             this.wsSend('EVENT', JSON.stringify({
                 type: 'bot_highwaybuding',
                 data: this.ishighwayed
+            }))
+        })
+        this.bot.on('afk_started', () => {
+            this.wsSend('EVENT', JSON.stringify({
+                type: 'bot_afk',
+                data: true
+            }))
+        })
+        this.bot.on('afk_stoped', () => {
+            this.wsSend('EVENT', JSON.stringify({
+                type: 'bot_afk',
+                data: false
             }))
         })
     }

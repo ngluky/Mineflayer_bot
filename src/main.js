@@ -15,10 +15,13 @@ let botName = ''
 
 ws.addEventListener('message' , (mess) => {
     var mess = JSON.parse(mess.data)
+    // if (mess.data.type != "move") {
+    //     console.log("🚀 ~ file: main.js:18 ~ ws.addEventListener ~ mess:", mess)
+    // }
+
     switch(mess.type) {
         case 'EVENT':
             var data = JSON.parse(mess.data)
-            console.log("🚀 ~ file: main.js:24 ~ ws.addEventListener ~ data:", data)
             switch (data.type) {
                 case 'bot_run':
                     const status = document.querySelector('#bot_run .status_div');
@@ -129,7 +132,6 @@ function setPos(xyz) {
 function sendAip(type, data) {
     ws.send(JSON.stringify({type: type, data: data}))
 }
-
 
 function sile_bar(data) {
     bots = data
@@ -285,7 +287,7 @@ function new_bot() {
                 <div class="status_div"></div>
             </div>
             <div class="div_line center">
-                <button>
+                <button onclick="command(true)">
                     <i class="ri-external-link-line"></i>
                     CONMMAND
                 </button>
@@ -473,54 +475,8 @@ function new_bot() {
 </div>`
 }
 
-function Follow(name) {
-    new_bot()
-    sendAip('FOLLOW', {
-        bot_name: name
-    })
-}
-function autofish() {
-    sendAip({
-        type: 'function', path: ['autofish']
-    }, () => {   
-    })
-}
-function goto() {
-    var i = document.querySelectorAll('body > div > div.contro > div.command.pos > div.body_command input')
-    console.log(i)
-    sendAip({
-        type: 'function', path: ['goto'], arg: [0,i[0].value * 1, i[1].value * 1, i[2].value * 1]
-    }, () => {   
-    })
-}
-
-function cancel() {
-    sendAip({
-        type: 'function', path: ['cancel'], arg: []
-    })
-}
-function highwaybuding() {
-    var inputs = document.querySelectorAll('.command.highway.input .body_command input')
-
-    var values = [0];
-    inputs.forEach(e => {
-        values.push(e.value)
-    })
-
-    console.log(values)
-
-    sendAip({
-        type: 'function', path: ['highwaybuding'], arg:values
-    }, () => {
-        console.log('askjfj')
-    })
-
-}
-
 function afk() {
-    sendAip({
-        type: 'function', path: ['afk'], arg: []
-    }, () => {
-        console.log('askjfj')
+    sendAip('STAR_COMMAND', {
+        command: 'bot_afk'
     })
 }

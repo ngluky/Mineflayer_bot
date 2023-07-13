@@ -155,19 +155,16 @@ wss.on('connection', function connection(ws) {
                     type: 'bot_run',
                     data: false
                 }))
-
-            
-
+                break;
+            case 'STAR_COMMAND':
+                const {command} = mess.data
+                console.log("🚀 ~ file: index.js:161 ~ ws.on ~ command:", command)
+                var bot = ws_2_bot(ws.id)
+                if (Object.keys(bot.commands).includes(command)) {
+                    bot.commands[command]()
+                }
+                break;
         }
-        // if (mess.type == 'unfollow') {
-        //     Object.keys(handl_command.bots_ws_follow).forEach(e => {
-        //         var element = handl_command.bots_ws_follow[e].find(j => j == ws.id)
-        //         if (element) {
-        //             const index = handl_command.bots_ws_follow[e].indexOf(ws.id);
-        //             handl_command.bots_ws_follow[e].splice(index, 1)
-        //         }
-        //     })
-        // }
     })
 
     ws.on('close', () => {

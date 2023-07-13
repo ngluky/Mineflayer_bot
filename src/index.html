@@ -28,6 +28,87 @@
             
         </div>
     </div>
+    <div class="popup seting hind">
+        <div class="popup_close">
+            <i class="ri-close-fill"></i>
+        </div>
+    </div>
+
+    <div class="popup command hind">
+        <div class="popup_close" onclick="command(false)">
+            <i class="ri-close-fill"></i>
+        </div>
+        <div class="popup_body">
+            <div class="command_line">
+                <div class="command_line_name">
+                    GOTO
+                </div>
+                <div class="command_line_arg">
+                    <div class="custom_input" contenteditable="true" placeholder="x"></div>
+                    <div class="custom_input" contenteditable="true" placeholder="y"></div>
+                    <div class="custom_input" contenteditable="true" placeholder="z"></div>
+                </div>
+                <div class="command_line_button">
+                    <button>GO</button>
+                </div>
+            </div>
+            <div class="command_line">
+                <div class="command_line_name">
+                    HIGHWAYBUDING
+                </div>
+                <div class="command_line_arg">
+                    <div class="custom_input" contenteditable="true" placeholder="x"></div>
+                    <div class="custom_input" contenteditable="true" placeholder="y"></div>
+                    <div class="custom_input" contenteditable="true" placeholder="z"></div>
+                </div>
+                <div class="command_line_button">
+                    <button>GO</button>
+                </div>
+            </div>
+            <div class="command_line">
+                <div class="command_line_name">
+                    AUTO FISH
+                </div>
+                <div class="command_line_arg">
+                </div>
+                <div class="command_line_button">
+                    <button>Start</button>
+                </div>
+            </div>
+            <div class="command_line">
+                <div class="command_line_name">
+                    ANTI AFK
+                </div>
+                <div class="command_line_arg">
+                </div>
+                <div class="command_line_button">
+                    <button>GO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('div[contenteditable]').forEach(e => {
+            e.addEventListener("keydown", (event) => {
+                if (event.keyCode == 13) {
+                    event.preventDefault()
+                }
+            })
+        })
+
+        function command(show) {
+            const div = document.querySelector('.popup.command')
+            if (show) {
+                div.classList.remove('hind')
+            }
+            else {
+                if (!div.classList.contains('hind')) {
+                    div.classList.add('hind')
+                }
+            }
+        }
+    </script>
 </body>
 
 </html>

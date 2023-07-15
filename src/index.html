@@ -1,114 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bot_contro</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
+    <script src="ws.js"></script>
+    <script src="https://unpkg.com/clsx"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js" integrity="sha256-NGC9JEuTWN4GhTj091wctgjzftr+8WNDmw0H8J5YPYE=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/InventivetalentDev/MineRender@1.4.6/dist/skin.min.js"></script>
     <link rel="stylesheet" href="style.css">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.4.0/fonts/remixicon.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-    <script src="main.js"></script>
+    <title>react_test</title>
 </head>
-
 <body>
-    <div class="body">
-        <div class="star_bart">
-            <div class="star_bart">
-                <div class="button">
-                    <i class="ri-settings-2-line"></i>
-                </div>
-
-                <div class="button add" onclick="unfollow();new_bot()">
-                    <i class="ri-add-line"></i>
-                </div>
-            </div>
-        </div>
-        <div class="conten" id="bot_display">
-            
-        </div>
-    </div>
-    <div class="popup seting hind">
-        <div class="popup_close">
-            <i class="ri-close-fill"></i>
-        </div>
-    </div>
-
-    <div class="popup command hind">
-        <div class="popup_close" onclick="command(false)">
-            <i class="ri-close-fill"></i>
-        </div>
-        <div class="popup_body">
-            <div class="command_line">
-                <div class="command_line_name">
-                    GOTO
-                </div>
-                <div class="command_line_arg">
-                    <div class="custom_input" contenteditable="true" placeholder="x"></div>
-                    <div class="custom_input" contenteditable="true" placeholder="y"></div>
-                    <div class="custom_input" contenteditable="true" placeholder="z"></div>
-                </div>
-                <div class="command_line_button">
-                    <button>GO</button>
-                </div>
-            </div>
-            <div class="command_line">
-                <div class="command_line_name">
-                    HIGHWAYBUDING
-                </div>
-                <div class="command_line_arg">
-                    <div class="custom_input" contenteditable="true" placeholder="x"></div>
-                    <div class="custom_input" contenteditable="true" placeholder="y"></div>
-                    <div class="custom_input" contenteditable="true" placeholder="z"></div>
-                </div>
-                <div class="command_line_button">
-                    <button>GO</button>
-                </div>
-            </div>
-            <div class="command_line">
-                <div class="command_line_name">
-                    AUTO FISH
-                </div>
-                <div class="command_line_arg">
-                </div>
-                <div class="command_line_button">
-                    <button>Start</button>
-                </div>
-            </div>
-            <div class="command_line">
-                <div class="command_line_name">
-                    ANTI AFK
-                </div>
-                <div class="command_line_arg">
-                </div>
-                <div class="command_line_button">
-                    <button>GO</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.querySelectorAll('div[contenteditable]').forEach(e => {
-            e.addEventListener("keydown", (event) => {
-                if (event.keyCode == 13) {
-                    event.preventDefault()
-                }
-            })
-        })
-
-        function command(show) {
-            const div = document.querySelector('.popup.command')
-            if (show) {
-                div.classList.remove('hind')
-            }
-            else {
-                if (!div.classList.contains('hind')) {
-                    div.classList.add('hind')
-                }
-            }
-        }
-    </script>
+    <div id="root"></div>
+    <script type="text/babel" src="main.jsx"></script>
 </body>
-
 </html>

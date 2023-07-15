@@ -3,6 +3,8 @@ const http = require('http')
 const path = require('path');
 const WebSocket = require('ws')
 const { v4: uuidv4 } = require('uuid')
+var request = require('request').defaults({ encoding: null });
+
 
 const botAutoFishing = require('./botAutoFishing');
 
@@ -102,7 +104,7 @@ function handl_update(type, name, data) {
     var wss_id = handl_command.bots_ws_follow[name]
     wss.clients.forEach(ws => {
         if (wss_id.includes(ws.id)) {
-            ws.send(JSON.stringify({ type: type, 'data': data }))
+            ws.send(JSON.stringify({ type: type, 'data': data}))
         }
     })
 }
@@ -121,11 +123,12 @@ wss.on('connection', function connection(ws) {
     ws.id = uuidv4()
     ws.on('message', (mess) => {
         var mess = JSON.parse(String(mess))
+        const id = mess.id
         console.log("🚀 ~ file: index.js:125 ~ ws.on ~ mess:", mess)
-        
+
         switch (mess.type) {
             case 'STAR_BOT':
-                const {botName, iP, Port} = mess.data
+                const { botName, iP, Port } = mess.data
                 if (handl_command.bots[botName]) return
                 var bot = new botAutoFishing(botName, iP, Port)
                 bot.Update = handl_update
@@ -133,7 +136,7 @@ wss.on('connection', function connection(ws) {
                 handl_command.bots_ws_follow[botName] = [ws.id]
                 break;
             case 'FOLLOW':
-                const {bot_name} = mess.data;
+                const { bot_name } = mess.data;
                 if (!handl_command.bots_ws_follow[bot_name].includes(ws.id)) {
                     handl_command.bots_ws_follow[bot_name].push(ws.id)
                 }
@@ -157,13 +160,21 @@ wss.on('connection', function connection(ws) {
                 }))
                 break;
             case 'STAR_COMMAND':
-                const {command} = mess.data
+                const { command } = mess.data
                 console.log("🚀 ~ file: index.js:161 ~ ws.on ~ command:", command)
                 var bot = ws_2_bot(ws.id)
                 if (Object.keys(bot.commands).includes(command)) {
                     bot.commands[command]()
                 }
                 break;
+            case 'INIT':
+                ws.send(JSON.stringify({
+                    type: 'INFOR',
+                    data: JSON.stringify({
+                        bots: Object.keys(handl_command.bots)
+                    }),
+                    id: id
+                }))
         }
     })
 
@@ -177,14 +188,24 @@ wss.on('connection', function connection(ws) {
         })
     })
 
-    ws.send(JSON.stringify({
-        type: 'INFOR',
-        data: JSON.stringify({
-            bots: Object.keys(handl_command.bots)
-        })
-    }))
 })
-*
+
+app.get('/imgbase64', async (req, res) => {
+    const url = req.query.url
+    if (url) {
+
+        request.get(url, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                data = "data:" + response.headers["content-type"] + ";base64," + Buffer.from(body).toString('base64');
+                res.send(data)
+            }
+        });
+
+    }
+    else {
+        res.send('null')
+    }
+})
 
 app.get('/', (req, res) => {
     res.send(`<!DOCTYPE html><html lang="en"><head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Document</title></head><body> <script> window.location = window.location.href + 'bot_contro' </script></body></html>`)
@@ -199,13 +220,18 @@ app.get('/status', (req, res) => {
     console.log('status')
     res.send('ok')
 })
-app.get('/main.js', (req, res) => {
-    res.sendFile('/src/main.js', {
+app.get('/main.jsx', (req, res) => {
+    res.sendFile('src/main.jsx', {
         root: path.join(__dirname)
     })
 })
 app.get('/style.css', (req, res) => {
     res.sendFile('/src/style.css', {
+        root: path.join(__dirname)
+    })
+})
+app.get('/ws.js', (req, res) => {
+    res.sendFile('./src/ws.js', {
         root: path.join(__dirname)
     })
 })
